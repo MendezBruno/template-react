@@ -1,24 +1,68 @@
-import React, { Component } from 'react';
-import { HashRouter as Router, Route, Link, Switch } from 'react-router-dom'
+import React, {Component, ReactNode} from 'react';
+import {HashRouter as Router, Route, Link, Switch, Redirect} from 'react-router-dom'
 import './App.css';
-import {Bar, Foo, Home} from "./components/Pages";
+import routes from "./routes";
+
+interface IProps {
+  children: ReactNode;
+  path: string;
+}
 
 class App extends Component  {
+
+   AllRoutes = () => {
+    // if ( !isAuthenticated() ) return <Redirect to="/login" />
+    return (<div>
+      {routes.map((route, index) => {
+        return (
+            <Route
+                key={index}
+                path={route.path}
+                exact={route.exact}
+                component={( props: any )=> {
+                  return (
+                        <route.component {...props} />
+                  );
+                }}
+            />
+        );
+      })}
+    </div>)
+  };
+
+  // A wrapper for <Route> that redirects to the login
+// screen if you're not yet authenticated.
+   PrivateRoute({ children, ...rest }: IProps) {
+     function isAuthenticated() {
+       return true;
+     }
+
+       return (
+          <Route
+              {...rest}
+              render={({ location }) =>
+                  isAuthenticated() ? (
+                      children
+                  ) : (
+                      <Redirect
+                          to={{
+                            pathname: "/login",
+                            state: { from: location }
+                          }}
+                      />
+                  )
+              }
+          />
+      );
+    }
+
+
   render() {
     return (
       <Router>
-        <div>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/foo">Foo</Link>
-            <Link to="/bar">Bar</Link>
-          </nav>
-          <Switch>
-            <Route exact path="/" component={Home} />
-            <Route exact path="/foo" component={Foo} />
-            <Route exact path="/bar" component={Bar} />
-          </Switch>
-        </div>
+        <this.PrivateRoute path="*">
+         <this.AllRoutes/>
+        </this.PrivateRoute>
       </Router>
     );
   }
